@@ -2,17 +2,8 @@ import socket
 
 HOST = '127.0.0.1'  # IP address of your web server
 PORT = 8080  # Port to connect to
-
-
-def compress(item):
-    final=''
-    for char in item:
-        if char!="<":
-            final+=char
-        else:
-            break
-    return final
-
+paths = []
+product_pages = []
 
 # Function to send an HTTP GET request and receive the response
 def send_http_request(path):
@@ -36,6 +27,14 @@ def send_http_request(path):
     except Exception as e:
         pass
 
+
+response = send_http_request('/products')   #retrieve product paths from listing page
+responses = response.split('"')
+paths = [response for response in responses if "http" in response]
+for path in paths:
+    path=path.split("8080")[1]
+    product_pages.append(path)
+
 # simple pages 
 simple_pages = ['/about', '/contacts']
 page_contents = {}
@@ -45,7 +44,6 @@ for path in simple_pages:
         page_contents[path] = response
 
 # product pages 
-product_pages = ['/products/0', '/products/1']
 product_details = {}
 for path in product_pages:
     response = send_http_request(path)
@@ -54,10 +52,10 @@ for path in product_pages:
         #print(response)
         lines = response.split('<p>')
 
-        name_line = compress(lines[2])
-        author_line = compress(lines[3])
-        price_line = compress(lines[4])
-        description_line = compress(lines[5])
+        name_line = lines[2].split('<', 1)[0]
+        author_line = lines[3].split('<', 1)[0]
+        price_line = lines[4].split('<', 1)[0]
+        description_line = lines[5].split('<', 1)[0]
         #print("####################")
 
         product_details[path] = {
