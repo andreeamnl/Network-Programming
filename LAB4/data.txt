@@ -1,0 +1,11 @@
+http://127.0.0.1:8080/about:
+HTTP/1.1 200 OK
+Content-Type: text/html
+
+This is the About page.
+
+http://127.0.0.1:8080/contacts:
+HTTP/1.1 200 OK
+Content-Type: text/html
+
+No need to contact

@@ -1,10 +1,11 @@
 import requests
 from bs4 import BeautifulSoup
-urls = ["https://999.md/ro/list/animals-and-plants/cats"]
+urls = ["https://999.md/ro/list/audio-video-photo/headphones"]
+urls=["https://999.md/ro/list/animals-and-plants/cats"]
 data = []
 
 
-def fetch_and_parse(current, urls, data, max):
+def fetch_and_parse(current, urls, data):
     current_link = urls[current]
     page = requests.get(current_link)
     soup = BeautifulSoup(page.content, "html.parser")
@@ -22,21 +23,23 @@ def fetch_and_parse(current, urls, data, max):
             urls.append(link)
     try:
                 
-        if current == max or current >= len(urls)-1:
+        if  current >= len(urls)-1:
             return data
         else:
             
-            fetch_and_parse(current+1, urls, data, max)
+            fetch_and_parse(current+1, urls, data)
     except Exception as e:
         print(e)
 
-init = fetch_and_parse(0, urls, data, 10)
+init = fetch_and_parse(0, urls, data)
 
 
 f = open("links.txt", "a")
 for link in data:
-    f.write(link + "\n")
-    #print(link)
+    #f.write(link + "\n")
+    print(link)
 f.close()
 
+
+print(len(data))
 #print(data)

@@ -72,10 +72,10 @@ class PlayerFactory:
     def from_protobuf(self, binary):
             player_list = []
             try:
-                player_message = Player()  # Create an instance of your Player message
-                player_message.ParseFromString(binary)  # Parse the binary data
+                player_message = Player()  
+                player_message.ParseFromString(binary) 
                 for player in player_message.players:
-                    player_obj = Player()  # Create a Python Player object (you may need to define this class)
+                    player_obj = Player() 
                     player_obj.nickname = player.nickname
                     player_obj.email = player.email
                     player_obj.date_of_birth = player.date_of_birth
