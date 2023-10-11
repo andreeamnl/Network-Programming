@@ -2,59 +2,65 @@ import socket
 import threading
 import json
 
-# Server configuration
 HOST = '127.0.0.1'
-PORT = 8090
+PORT = 8080
 
-# Create a socket
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-# Connect to the server
+client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 client_socket.connect((HOST, PORT))
-print(f"Connected to {HOST}:{PORT}")
 
-def receive_messages():
+
+def message_handler():
+
     while True:
         message = client_socket.recv(1024).decode('utf-8')
+
         if not message:
             break
-        message_data = json.loads(message)
-        if message_data["type"] == "connected":
-            print(message_data["payload"]["message"])
-        elif message_data["type"] == "message":
-            sender = message_data["payload"]["sender"]
-            room = message_data["payload"]["room"]
-            text = message_data["payload"]["message"]
-            print(f"{sender} in room '{room}': {text}")
-        elif message_data["type"] == "error":
-            err = message_data["payload"]["message"]
-            print(err)
-        elif message_data["type"] == "connect_ack":
-            ack_message = message_data["payload"]["message"]
-            print(f"Connection: {ack_message}")
-        else:
-            print("")
 
-receive_thread = threading.Thread(target=receive_messages)
-receive_thread.daemon = True
-receive_thread.start()
+        message = json.loads(message)
 
-client_name = input("Name: ")
-room_name = input("Room: ")
-connect_message = json.dumps({"type": "connect", "payload": {"name": client_name, "room": room_name}})
-client_socket.send(connect_message.encode('utf-8'))
+        if message['type'] == 'connection':
+            print(f"Connection received: {message['payload']['message']}")
+
+        elif message['type'] == 'notification':
+            print(f"Message received: {message['payload']['text']}")
+
+
+client_thread = threading.Thread(target=message_handler)
+client_thread.daemon = True
+client_thread.start()
+
+connection_room = str(input('Room: '))
+client_name = str(input('Name: '))
+
+message = {
+    "type": "connect",
+    "payload": {
+        "room": connection_room,
+        "name": client_name
+    }
+}
+
+
+client_socket.send((json.dumps(message)).encode('utf-8'))
 
 while True:
-    message = input("Enter a message (or 'exit' to quit): ")
 
-    if message.lower() == 'exit':
-        print("User exited from room")
+    client_message = str(input())
+
+    if client_message.upper() == 'EXIT':
         break
-    text = json.dumps({"type": "message",
-                       "payload": {"sender": client_name,
-                                   "room": room_name,
-                                   "text": message}})
-    client_socket.send(text.encode('utf-8'))
 
-# Close the client socket when done
+    mess = {
+        "type": "message",
+        "payload": {
+            "room": connection_room,
+            "text": client_message,
+            "sender": client_name
+        }
+    }
+
+    client_socket.send(json.dumps(mess).encode('utf-8'))
+
 client_socket.close()
