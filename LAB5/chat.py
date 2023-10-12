@@ -4,7 +4,7 @@ import json
 import os
 
 HOST = '127.0.0.1'
-PORT = 1111
+PORT = 1112
 MEDIA_FOLDER = 'server_media'
 CLIENTS = {}
 ROOMS = {}

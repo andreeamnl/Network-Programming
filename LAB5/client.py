@@ -5,7 +5,7 @@ import os
 import re
 
 HOST = '127.0.0.1'
-PORT = 1111
+PORT = 1112
 MEDIA_FOLDER = 'client_media'
 CLIENT_SOCKET = None
 
@@ -151,9 +151,9 @@ def main():
             CLIENT_SOCKET.sendall(bytes(data, encoding='utf-8'))
             break
 
-        if re.match(r'upload ([A-Za-z\./]+)', message):
+        if re.match(r'upload: ([A-Za-z\./]+)', message):
             upload_file(message.split(' ')[1], name, room)
-        elif re.match(r'download ([A-Za-z\.]+)', message):
+        elif re.match(r'download: ([A-Za-z\.]+)', message):
             file_download_message = {
                 "type": "download",
                 "payload": {
