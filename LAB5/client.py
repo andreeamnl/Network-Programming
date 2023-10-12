@@ -151,9 +151,9 @@ def main():
             CLIENT_SOCKET.sendall(bytes(data, encoding='utf-8'))
             break
 
-        if re.match(r'upload: ([A-Za-z\./]+)', message):
+        if message.startswith("upload: "):
             upload_file(message.split(' ')[1], name, room)
-        elif re.match(r'download: ([A-Za-z\.]+)', message):
+        elif message.startswith("download: "):
             file_download_message = {
                 "type": "download",
                 "payload": {
