@@ -16,7 +16,6 @@ from models.electro_scooter import ElectroScooter
 
 
 with open("config.json",'r') as config_file:
-
     config = json.load(config_file)
 
 
