@@ -7,17 +7,7 @@ from flask_swagger_ui import get_swaggerui_blueprint
 import json
     
 
-@app.route('/')
-def hello_world():
 
-    """
-    A simple "Hello, World!" endpoint.
-    ---
-    responses:
-      200:
-        description: A simple hello message.
-    """
-    return('hello')
 
 @app.route('/api/electro-scooters', methods=['POST'])
 def create_electro_scooter():
