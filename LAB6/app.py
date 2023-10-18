@@ -19,11 +19,10 @@ with open("config.json",'r') as config_file:
 
     config = json.load(config_file)
 
-#print(config["database_url"])
 
 def create_app():
     app = Flask(__name__)
-    # Configure SQLAlchemy to use SQLite
+    # Configure SQLAlchemy to use postgresql
     app.config['SQLALCHEMY_DATABASE_URI'] = config["database_url"]
     db.init_app(app)
     Swagger(app)
