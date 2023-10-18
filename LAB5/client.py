@@ -5,7 +5,7 @@ import os
 import re
 
 HOST = '127.0.0.1'
-PORT = 1112
+PORT = 1117
 MEDIA_FOLDER = 'client_media'
 CLIENT_SOCKET = None
 
@@ -13,7 +13,6 @@ def connect():
     global CLIENT_SOCKET
     CLIENT_SOCKET = create_client_socket()
     print(f"Connected to {HOST}:{PORT}")
-    
 
 def create_client_socket():
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -38,28 +37,22 @@ def perform_server_connection():
 
     return name, room
 
-def receive_messages(name):
+def receive_messages(client_socket, name):
     while True:
-        server_message = CLIENT_SOCKET.recv(1024).decode('utf-8')
+        server_message = client_socket.recv(1024).decode('utf-8')
         if not server_message:
             break
 
-        try:
-            data = json.loads(server_message)
-        except json.JSONDecodeError:
-            print("Received invalid JSON data from the server.")
-            continue
+        data = json.loads(server_message)
+        handle_server_message(data, name, client_socket)
 
-        handle_server_message(data, name)
-
-
-def handle_server_message(data, name):
+def handle_server_message(data, name, client_socket):
     message_type = data.get('type', '')
 
     if message_type == 'connect_ack' or message_type == 'notification':
         print(data['payload']['message'])
-    elif message_type == 'download-ack':
-        download_file(data, name)
+    elif data['type'] == 'download-ack':
+        download_file(client_socket, data, name)
     elif message_type == 'message':
         print(f"\nRoom: {data['payload']['room']}, {data['payload']['sender']}: {data['payload']['text']}")
     else:
@@ -87,44 +80,21 @@ def upload_file(file_path, name, room):
                 break
             CLIENT_SOCKET.sendall(chunk)
 
-def download_file(data, name):
-    message_type = data.get('type', '')
+def download_file(client_socket, data, name):
+    file_name = data['payload']['file_name']
+    option = 'w'
+    if not os.path.exists(os.path.join(MEDIA_FOLDER, name, file_name)):
+        option = 'x'
 
-    if message_type == 'download-ack':
-        file_name = data['payload']['file_name']
+    with open(os.path.join(MEDIA_FOLDER, name, file_name), f'{option}b') as received_file:
+        file_size = data['payload']['file_size']
+        index = 0
+        while index < file_size:
+            chunk = client_socket.recv(1024)
+            received_file.write(chunk)
+            index += len(chunk)
 
-        room = data['payload'].get('room', '')  
-
-        file_path = os.path.join(MEDIA_FOLDER, room, file_name)
-
-        if os.path.exists(file_path):
-            file_size = os.path.getsize(file_path)
-
-            stream_message = {
-                "type": "download-ack",
-                "payload": {
-                    "file_name": file_name,
-                    "file_size": file_size
-                }
-            }
-            server_data = json.dumps(stream_message)
-            CLIENT_SOCKET.sendall(bytes(server_data, encoding='utf-8'))
-
-            with open(file_path, 'rb') as file:
-                for chunk in iter(lambda: file.read(1024), b''):
-                    CLIENT_SOCKET.sendall(chunk)
-        else:
-            notification_message = {
-                "type": "notification",
-                "payload": {
-                    "message": f"The file {file_name} does not exist.\n"
-                }
-            }
-            server_data = json.dumps(notification_message)
-            CLIENT_SOCKET.sendall(bytes(server_data, encoding='utf-8'))
-    else:
-        print(f'Invalid message type for download: {message_type}')
-
+    print('File was downloaded successfully')
 
 def main():
     connect()
@@ -133,7 +103,8 @@ def main():
     if not os.path.isdir(os.path.join(MEDIA_FOLDER, name)):
         os.makedirs(os.path.join(MEDIA_FOLDER, name))
 
-    receive_thread = threading.Thread(target=receive_messages, args=(name,))
+    receive_thread = threading.Thread(target=receive_messages, args=(CLIENT_SOCKET, name))
+
     receive_thread.daemon = True
     receive_thread.start()
 
@@ -151,9 +122,9 @@ def main():
             CLIENT_SOCKET.sendall(bytes(data, encoding='utf-8'))
             break
 
-        if message.startswith("upload: "):
+        if re.match(r'upload ([A-Za-z\./]+)', message):
             upload_file(message.split(' ')[1], name, room)
-        elif message.startswith("download: "):
+        elif re.match(r'download ([A-Za-z\.]+)', message):
             file_download_message = {
                 "type": "download",
                 "payload": {

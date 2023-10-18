@@ -4,7 +4,7 @@ import json
 import os
 
 HOST = '127.0.0.1'
-PORT = 1112
+PORT = 1117
 MEDIA_FOLDER = 'server_media'
 CLIENTS = {}
 ROOMS = {}
@@ -127,31 +127,37 @@ def handle_upload(client_socket, data):
     send_broadcast_message(client_socket, CLIENTS, ROOMS, bytes(server_data, encoding='utf-8'))
 
 def handle_download(client_socket, data):
-    room = data['payload']['room']
-    file_name = data['payload']['file_name']
-    file_path = os.path.join(MEDIA_FOLDER, room, file_name)
-
+    file_path = f"{MEDIA_FOLDER}/{data['payload']['room']}/{data['payload']['file_name']}"
     if os.path.exists(file_path):
         file_size = os.path.getsize(file_path)
+        
 
         stream_message = {
             "type": "download-ack",
             "payload": {
-                "file_name": file_name,
+                "file_name": data['payload']['file_name'],
                 "file_size": file_size
             }
         }
         server_data = json.dumps(stream_message)
         client_socket.sendall(bytes(server_data, encoding='utf-8'))
 
-        with open(file_path, 'rb') as file:
-            for chunk in iter(lambda: file.read(1024), b''):
+        if file_size > 1024:
+            with open(file_path, 'rb') as file:
+                while True:
+                    chunk = file.read(1024)
+                    if not chunk:
+                        break
+                    client_socket.sendall(chunk)
+        else:
+            with open(file_path, 'rb') as file:
+                chunk = file.read(file_size)
                 client_socket.sendall(chunk)
     else:
         notification_message = {
             "type": "notification",
             "payload": {
-                "message": f"The file {file_name} does not exist.\n"
+                "message": f"The file {data['payload']['file_name']} does not exist.\n"
             }
         }
         server_data = json.dumps(notification_message)
