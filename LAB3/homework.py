@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import json  
 lnk = "https://999.md/ro/84159408"  #this is a real scrapped link
-lnk = "https://999.md/ro/84349867"   #this other link simply has more data to be scrapped
+#lnk = "https://999.md/ro/84349867"   #this other link simply has more data to be scrapped
  
  
 def tojson(lnk):

@@ -97,7 +97,7 @@ def consume(i):
 
 
 # Number of consumer threads
-num_threads = 2  ##i only ran the code for a few seconds 
+num_threads = 20  ##i only ran the code for a few seconds 
 
 # Create and start consumer threads
 threads = []
