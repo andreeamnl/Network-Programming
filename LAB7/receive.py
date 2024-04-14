@@ -71,9 +71,7 @@ def consume(i):
     connection = pika.BlockingConnection(
         pika.ConnectionParameters(host='localhost'))
     channel = connection.channel()
-
     channel.exchange_declare(exchange='logs', exchange_type='fanout')
-
     result = channel.queue_declare(queue='', exclusive=False)
     queue_name = result.method.queue
 
@@ -85,18 +83,15 @@ def consume(i):
             db.insert(json_data)  # Insert the valid dictionary into the database
         except json.decoder.JSONDecodeError as e:
             pass
-
-
-
     channel.basic_consume(
         queue=queue_name, on_message_callback=callback, auto_ack=True)
-
     channel.start_consuming()
 
 
 
 
 # Number of consumer threads
+
 num_threads = 20  ##i only ran the code for a few seconds 
 
 # Create and start consumer threads

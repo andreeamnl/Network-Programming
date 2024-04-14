@@ -1,7 +1,6 @@
 import requests
 
 from bs4 import BeautifulSoup
-urls = ["https://999.md/ro/list/audio-video-photo/headphones"]
 urls=["https://999.md/ro/list/animals-and-plants/cats"]
 data = []
 import pika
